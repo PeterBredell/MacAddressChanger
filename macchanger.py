@@ -1,6 +1,9 @@
-import subprocess
+import wmi
+import winreg
+import re
 import ctypes
 import sys
+import time
 
 def is_admin():
     try:
@@ -8,50 +11,110 @@ def is_admin():
     except:
         return False
 
-def get_adapters():
-    cmd = 'powershell -Command "Get-NetAdapter | Select-Object Name, MacAddress"'
-    result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
-    print("\nDebug - Available adapters:")
-    print(result.stdout)
-    return result.stdout.strip().split("\n")[2:]  # Skip header lines
+def get_adapter_info(adapter_name):
+    """Get WMI adapter object and registry info."""
+    w = wmi.WMI()
+    adapters = w.Win32_NetworkAdapter(Name=adapter_name)
+    if not adapters:
+        return None
+    
+    adapter = adapters[0]
+    print(f"Debug - PNPDeviceID: {adapter.PNPDeviceID}")
+    
+    # Use CurrentControlSet instead of ControlSet001
+    reg_base = r"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}"
+    
+    # Try to find adapter in registry
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_base, 0, winreg.KEY_READ) as base_key:
+            for i in range(256):
+                try:
+                    subkey_name = winreg.EnumKey(base_key, i)
+                    with winreg.OpenKey(base_key, subkey_name, 0, winreg.KEY_READ) as subkey:
+                        try:
+                            driver_desc = winreg.QueryValueEx(subkey, "DriverDesc")[0]
+                            if driver_desc == adapter.Name:
+                                return adapter, f"{reg_base}\\{subkey_name}"
+                        except WindowsError:
+                            continue
+                except WindowsError:
+                    break
+    except WindowsError as e:
+        print(f"Registry error: {e}")
+    
+    return None
 
-def change_mac(adapter_name, new_mac):
-    # First try to see if we can modify the adapter
-    test_cmd = f'powershell -Command "Get-NetAdapter -Name \'{adapter_name}\' | Format-List"'
-    result = subprocess.run(test_cmd, capture_output=True, text=True, shell=True)
-    print("\nDebug - Adapter details:")
-    print(result.stdout)
+def change_mac_address(adapter_name, new_mac):
+    """Change MAC address using WMI and Registry."""
+    if not re.match(r'^[0-9A-F]{12}$', new_mac.upper()):
+        print("Invalid MAC address format")
+        return False
 
-    # Try to change MAC
-    cmd = f'powershell -Command "Set-NetAdapter -Name \'{adapter_name}\' -MacAddress \'{new_mac}\' -Confirm:$false"'
-    result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
-    print("\nDebug - Change MAC result:")
-    print(f"stdout: {result.stdout}")
-    print(f"stderr: {result.stderr}")
-    return result.returncode == 0
+    info = get_adapter_info(adapter_name)
+    if not info:
+        print(f"Adapter {adapter_name} not found")
+        return False
+
+    adapter, reg_path = info
+    print(f"Found adapter: {adapter.Name}")
+    print(f"Current MAC: {adapter.MacAddress}")
+    print(f"Registry path: {reg_path}")
+
+    try:
+        # Disable adapter
+        print("Disabling adapter...")
+        adapter.Disable()
+        time.sleep(1)
+
+        # Change MAC in registry with full access rights
+        print("Updating registry...")
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path, 0, winreg.KEY_ALL_ACCESS) as key:
+                winreg.SetValueEx(key, "NetworkAddress", 0, winreg.REG_SZ, new_mac.upper())
+                print("Registry update successful")
+        except WindowsError as e:
+            print(f"Registry error: {e}")
+            return False
+
+        # Re-enable adapter
+        print("Enabling adapter...")
+        adapter.Enable()
+        time.sleep(2)
+
+        # Verify change
+        adapters = wmi.WMI().Win32_NetworkAdapter(Name=adapter_name)
+        if adapters and adapters[0].MacAddress and adapters[0].MacAddress.replace(':', '') == new_mac.upper():
+            print(f"MAC successfully changed to: {adapters[0].MacAddress}")
+            return True
+        else:
+            print("MAC change failed or not yet reflected")
+            return False
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        # Try to re-enable adapter if something went wrong
+        try:
+            adapter.Enable()
+        except:
+            pass
+        return False
 
 if __name__ == "__main__":
     if not is_admin():
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
         sys.exit()
 
-    print("MAC Changer - Debug Mode")
+    # List available adapters
+    w = wmi.WMI()
+    adapters = w.Win32_NetworkAdapter(PhysicalAdapter=True)
     
-    # List adapters
-    adapters = get_adapters()
-    print("\nSelect adapter:")
-    for i, adapter in enumerate(adapters, 1):
-        print(f"{i}. {adapter}")
+    print("Available adapters:")
+    for i, adapter in enumerate(adapters):
+        if adapter.MacAddress:  # Only show adapters with MAC addresses
+            print(f"{i + 1}. {adapter.Name} - {adapter.MacAddress}")
 
-    choice = int(input("\nEnter number: ")) - 1
-    adapter_name = adapters[choice].split()[0]  # Get just the adapter name
+    choice = int(input("\nSelect adapter number: ")) - 1
+    new_mac = input("Enter new MAC (XXXXXXXXXXXX): ").strip()
 
-    # Change MAC
-    new_mac = input("Enter new MAC (XX:XX:XX:XX:XX:XX): ").replace(":", "")
-    print(f"\nAttempting to change {adapter_name} MAC to {new_mac}")
-    
-    if change_mac(adapter_name, new_mac):
-        print("\nMAC address change attempted.")
-    else:
-        print("\nFailed to change MAC address.")
+    change_mac_address(adapters[choice].Name, new_mac)
 
