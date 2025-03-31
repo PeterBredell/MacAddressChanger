@@ -1,7 +1,10 @@
 import wmi
+import wmi
 import winreg
 import re
+import re
 import ctypes
+import sys
 import sys
 import time
 
@@ -48,7 +51,48 @@ def change_mac_address(adapter_name, new_mac):
     """Change MAC address using WMI and Registry."""
     if not re.match(r'^[0-9A-F]{12}$', new_mac.upper()):
         print("Invalid MAC address format")
+def get_adapter_info(adapter_name):
+    """Get WMI adapter object and registry info."""
+    w = wmi.WMI()
+    adapters = w.Win32_NetworkAdapter(Name=adapter_name)
+    if not adapters:
+        return None
+    
+    adapter = adapters[0]
+    print(f"Debug - PNPDeviceID: {adapter.PNPDeviceID}")
+    
+    # Use CurrentControlSet instead of ControlSet001
+    reg_base = r"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}"
+    
+    # Try to find adapter in registry
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_base, 0, winreg.KEY_READ) as base_key:
+            for i in range(256):
+                try:
+                    subkey_name = winreg.EnumKey(base_key, i)
+                    with winreg.OpenKey(base_key, subkey_name, 0, winreg.KEY_READ) as subkey:
+                        try:
+                            driver_desc = winreg.QueryValueEx(subkey, "DriverDesc")[0]
+                            if driver_desc == adapter.Name:
+                                return adapter, f"{reg_base}\\{subkey_name}"
+                        except WindowsError:
+                            continue
+                except WindowsError:
+                    break
+    except WindowsError as e:
+        print(f"Registry error: {e}")
+    
+    return None
+
+def change_mac_address(adapter_name, new_mac):
+    """Change MAC address using WMI and Registry."""
+    if not re.match(r'^[0-9A-F]{12}$', new_mac.upper()):
+        print("Invalid MAC address format")
         return False
+
+    info = get_adapter_info(adapter_name)
+    if not info:
+        print(f"Adapter {adapter_name} not found")
 
     info = get_adapter_info(adapter_name)
     if not info:
