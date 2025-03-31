@@ -1,3 +1,10 @@
+"""
+MAC Address Changer
+MIT License
+Copyright (c) 2024
+See LICENSE file for details.
+"""
+
 import wmi
 import winreg
 import re

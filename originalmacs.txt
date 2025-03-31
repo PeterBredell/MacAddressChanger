@@ -1,5 +1,0 @@
-Realtek RTL8852BE WiFi 6 802.11ax PCIe Adapter
-   Physical Address. . . . . . . . . : 60-FF-9E-16-6F-C0
- Realtek Gaming GbE Family Controller
-   Physical Address. . . . . . . . . : 6C-0B-5E-9F-10-87
-   
