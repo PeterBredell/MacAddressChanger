@@ -154,8 +154,84 @@ def verify_mac_with_system_commands(adapter_name, expected_mac):
         
         return False
     except Exception as e:
-        print(f"Error verifying MAC with system commands: {str(e)}")
+        print(f"Error verifying MAC with system commands: {str(e)}, make sure the number starts with 02")
         return False
+
+def configure_virtual_nic():
+    """Create and configure a VirtualNIC."""
+    try:
+        print("Creating a virtual switch...")
+        subprocess.run([
+            "powershell", "-Command",
+            "New-VMSwitch -Name 'VirtualSwitch' -NetAdapterName 'Wi-Fi' -AllowManagementOS $true"
+        ], check=True)
+
+        print("Adding a VirtualNIC...")
+        subprocess.run([
+            "powershell", "-Command",
+            "Add-VMNetworkAdapter -ManagementOS -Name 'VirtualNIC' -SwitchName 'VirtualSwitch'"
+        ], check=True)
+
+        print("Configuring the VirtualNIC...")
+        use_dhcp = input("Do you want to use DHCP for the VirtualNIC? (yes/no): ").strip().lower()
+        if use_dhcp == "yes":
+            subprocess.run([
+                "powershell", "-Command",
+                "Set-NetIPInterface -InterfaceAlias 'vEthernet (VirtualNIC)' -Dhcp Enabled"
+            ], check=True)
+            subprocess.run(["ipconfig", "/renew"], check=True)
+        else:
+            ip_address = input("Enter the static IP address for the VirtualNIC (e.g., 192.168.1.100): ").strip()
+            prefix_length = input("Enter the prefix length (e.g., 24 for 255.255.255.0): ").strip()
+            gateway = input("Enter the default gateway (e.g., 192.168.1.1): ").strip()
+            subprocess.run([
+                "powershell", "-Command",
+                f"New-NetIPAddress -InterfaceAlias 'vEthernet (VirtualNIC)' -IPAddress {ip_address} -PrefixLength {prefix_length} -DefaultGateway {gateway}"
+            ], check=True)
+
+        print("Routing traffic through the VirtualNIC...")
+        subprocess.run([
+            "powershell", "-Command",
+            "Get-NetRoute | Where-Object { $_.DestinationPrefix -eq '0.0.0.0/0' -and $_.InterfaceAlias -eq 'Wi-Fi' } | Remove-NetRoute"
+        ], check=True)
+        subprocess.run([
+            "powershell", "-Command",
+            "New-NetRoute -DestinationPrefix '0.0.0.0/0' -InterfaceAlias 'vEthernet (VirtualNIC)' -NextHop 192.168.1.1"
+        ], check=True)
+
+        print("VirtualNIC configured successfully. Traffic is now routed through the VirtualNIC.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error configuring VirtualNIC: {e}")
+        return False
+
+def revert_virtual_nic():
+    """Revert VirtualNIC changes and restore original configuration."""
+    try:
+        print("Reverting VirtualNIC changes...")
+        subprocess.run([
+            "powershell", "-Command",
+            "Remove-NetRoute -DestinationPrefix '0.0.0.0/0' -InterfaceAlias 'vEthernet (VirtualNIC)'"
+        ], check=True)
+
+        subprocess.run([
+            "powershell", "-Command",
+            "New-NetRoute -DestinationPrefix '0.0.0.0/0' -InterfaceAlias 'Wi-Fi' -NextHop 192.168.1.1"
+        ], check=True)
+
+        subprocess.run([
+            "powershell", "-Command",
+            "Remove-VMNetworkAdapter -ManagementOS -Name 'VirtualNIC'"
+        ], check=True)
+
+        subprocess.run([
+            "powershell", "-Command",
+            "Remove-VMSwitch -Name 'VirtualSwitch'"
+        ], check=True)
+
+        print("VirtualNIC changes reverted successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error reverting VirtualNIC changes: {e}")
 
 def change_mac_address(adapter_name, new_mac):
     """Change MAC address using WMI and Registry."""
@@ -259,6 +335,18 @@ def change_mac_address(adapter_name, new_mac):
             pass
         return False
 
+    use_virtual_nic = input("MAC address change failed. Do you want to use a VirtualNIC instead? (yes/no): ").strip().lower()
+    if use_virtual_nic == "yes":
+        if configure_virtual_nic():
+            print("VirtualNIC fallback method succeeded.")
+            return True
+        else:
+            print("VirtualNIC fallback method failed.")
+            return False
+    else:
+        print("MAC address change aborted.")
+        return False
+
 if __name__ == "__main__":
     if not is_admin():
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
@@ -276,5 +364,10 @@ if __name__ == "__main__":
     choice = int(input("\nSelect adapter number: ")) - 1
     new_mac = input("Enter new MAC (XXXXXXXXXXXX): ").strip()
 
-    change_mac_address(adapters[choice].Name, new_mac)
+    try:
+        change_mac_address(adapters[choice].Name, new_mac)
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        revert_virtual_nic()
 
