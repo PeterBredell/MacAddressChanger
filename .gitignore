@@ -1,0 +1,123 @@
+# Build directories
+/build/
+/out/
+/bin/
+/lib/
+/Debug/
+/Release/
+/x64/
+/x86/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# VS Code specific files
+.vscode/.browse.c_cpp.db*
+.vscode/ipch/
+.vscode/c_cpp_properties.json.old
+.vscode/settings.json.old
+.vscode/tasks.json.old
+.vscode/launch.json.old
+
+# Visual Studio specific files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.filters
+*.vcxproj.user
+
+# MinGW/MSYS2 specific
+*.stackdump
+
+# Dependency directories
+/vcpkg/
+/packages/
+/vendor/
+
+# Python virtual environment (if using Python scripts)
+/.venv/
+/__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+log/
+logs/
+
+# Generated documentation
+/doc/
+/docs/html/
+/docs/latex/
+
+# Test output
+/Testing/
+
+# Coverage reports
+*.gcov
+*.gcda
+*.gcno
+/coverage/
+
+# Backup files
+*.bak
+*.backup
+
+# Project specific executables
+macchanger_cpp
+macchanger_cpp.exe
+
+# Python virtual environment
+.venv/
+
+# VS Code specific settings that might contain user-specific paths
+.vscode/settings.json
+
+# Other project specific files to ignore
+*.pyc
+__pycache__/
+
+# Temporary test files
+test.cpp
+test.exe
