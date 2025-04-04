@@ -2,6 +2,8 @@
 
 This project is a tool designed to allow users to change the MAC address of their network interface cards (NICs). It provides a simple and efficient way to anonymize your network identity or troubleshoot network-related issues.
 
+> **Note:** This tool is designed for educational and legitimate network troubleshooting purposes only. Users are responsible for ensuring they comply with all applicable network policies, terms of service, and laws when using this tool.
+
 ## Project Structure
 
 ```
@@ -40,11 +42,19 @@ MacAddressChanger/
 ```
 
 ## Features
-- Change the MAC address of physical NICs.
-- Restore the original MAC address when needed.
-- User-friendly interface for seamless operation.
-- Virtual NIC support for enhanced privacy (new).
-- C++ implementation for better performance (in development).
+- Change the MAC address of physical NICs
+- Restore the original MAC address when needed
+- User-friendly command-line interface for seamless operation
+- Virtual NIC support for enhanced privacy and bypassing MAC filtering
+- Hyper-V integration for advanced virtualization scenarios
+- Cross-language implementation (Python and C++)
+
+## Current Status
+
+- **Python Version**: Fully functional with all core features implemented
+- **C++ Version**: Basic implementation in progress
+- **Hyper-V Support**: Initial implementation complete
+- **Project Structure**: Organized for maintainability and future development
 
 ## Requirements
 - Operating System: Windows
@@ -118,15 +128,75 @@ The easiest way to use the application is with the launcher scripts in the `laun
 For C++ development setup instructions, see [docs/cpp_setup.md](docs/cpp_setup.md).
 
 ## Future Plans
-We aim to expand the functionality of this project by incorporating the following features:
+
+We aim to expand the functionality of this project with the following goals:
+
+### Short-term Goals (Next 3 Months)
+- **Complete C++ Implementation**:
+  - Implement all features from the Python version in C++
+  - Optimize performance for faster MAC address operations
+  - Ensure compatibility with the latest Windows versions
+
+### Medium-term Goals (3-6 Months)
 - **Enhanced Virtual NIC Support**:
-  - Improved tunneling of network traffic through virtual NICs.
-  - Better integration with Hyper-V and other virtualization platforms.
-- **Complete C++ Implementation**: Finishing the C++ version with all features of the Python version.
-- **Packaged GUI Version**: A user-friendly graphical interface will be introduced for easier operation.
+  - Improve tunneling of network traffic through virtual NICs
+  - Add support for custom network configurations
+  - Implement better error handling and recovery mechanisms
+- **Expanded Hyper-V Integration**:
+  - Add support for more advanced Hyper-V networking scenarios
+  - Implement MAC address rotation for virtual machines
+  - Create templates for common virtualization setups
+
+### Long-term Goals (6+ Months)
+- **Graphical User Interface**:
+  - Develop a user-friendly GUI for easier operation
+  - Create a system tray application for quick MAC changes
+  - Add scheduling capabilities for automatic MAC rotation
+- **Cross-Platform Support**:
+  - Extend functionality to Linux and macOS
+  - Create a unified codebase that works across platforms
+  - Implement platform-specific optimizations
+
+### Ongoing Improvements
+- **Code Quality**: Continuous refactoring and optimization
+- **Documentation**: Improve and expand documentation
+- **Testing**: Implement comprehensive test suite
+- **Security**: Regular security audits and improvements
+
+## Compatibility and Known Issues
+
+### Compatibility
+- **Windows Versions**: Tested on Windows 10 and Windows 11
+- **Network Adapters**: Works with most physical and virtual network adapters
+- **Administrator Rights**: Required for all MAC address operations
+
+### Known Issues
+- Some network adapters may not support MAC address changes
+- Certain security software may block MAC address modifications
+- Virtual NIC creation requires Hyper-V to be enabled
+- MAC address changes may temporarily disconnect network interfaces
 
 ## Contributing
-Contributions are welcome! Please fork the repository and submit a pull request with your changes.
+
+Contributions are welcome! Here's how you can contribute to the project:
+
+1. **Report Issues**: Submit bugs and feature requests through GitHub Issues
+2. **Suggest Improvements**: Share your ideas for making the tool better
+3. **Submit Pull Requests**: Implement new features or fix bugs
+4. **Improve Documentation**: Help make the documentation more comprehensive
+5. **Test on Different Systems**: Verify compatibility across different environments
+
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
+
 This project is licensed under the [MIT License](LICENSE).
+
+## Disclaimer
+
+This tool is provided for educational and legitimate network troubleshooting purposes only. The authors are not responsible for any misuse or damage caused by this tool. Always ensure you have permission to modify network settings on the systems you use this tool with.
