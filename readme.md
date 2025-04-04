@@ -9,19 +9,30 @@ MacAddressChanger/
 ├── bin/                  # Compiled executables
 ├── build/                # Build artifacts
 ├── docs/                 # Documentation
+│   ├── README.md         # Documentation overview
 │   ├── cpp_setup.md      # C++ development setup guide
 │   └── readme.md         # Original project documentation
+├── launchers/            # Quick-start launcher scripts
+│   ├── README.md         # Launchers overview
+│   ├── run_macchanger.bat     # Launch Python version
+│   ├── run_macchanger_cpp.bat # Launch C++ version
+│   └── setup_hyperv.bat       # Launch Hyper-V setup
 ├── scripts/              # Build and utility scripts
+│   ├── README.md         # Scripts overview
 │   ├── build_cpp.bat     # CMake-based build script
 │   ├── compile_cpp.bat   # Direct compilation script
 │   └── test_compiler.bat # C++ compiler test script
 ├── src/                  # Source code
+│   ├── README.md         # Source code overview
 │   ├── cpp/              # C++ source files
 │   │   └── macchanger.cpp # C++ implementation
 │   └── python/           # Python source files
 │       ├── macchanger.py  # Main Python implementation
 │       └── setup_hyperv.py # Hyper-V setup utility
 ├── tools/                # Helper tools and utilities
+│   ├── README.md         # Tools overview
+│   ├── check_environment.bat # Environment verification
+│   └── clean_build.bat       # Clean build artifacts
 ├── .gitignore            # Git ignore file
 ├── CMakeLists.txt        # CMake build configuration
 ├── LICENSE               # Project license
@@ -52,7 +63,28 @@ MacAddressChanger/
 
 ## Usage
 
-### Python Version
+### Using Launcher Scripts
+
+The easiest way to use the application is with the launcher scripts in the `launchers` directory:
+
+1. For the Python version:
+   ```
+   launchers\run_macchanger.bat
+   ```
+
+2. For the C++ version:
+   ```
+   launchers\run_macchanger_cpp.bat
+   ```
+
+3. For Hyper-V setup (if needed):
+   ```
+   launchers\setup_hyperv.bat
+   ```
+
+### Manual Execution
+
+#### Python Version
 
 1. Run the Python version directly:
    ```
@@ -64,7 +96,7 @@ MacAddressChanger/
    python src/python/setup_hyperv.py
    ```
 
-### C++ Version
+#### C++ Version
 
 1. Build the C++ version:
    ```
